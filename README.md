@@ -19,8 +19,6 @@ Before running the script, you need to configure the following variables in the 
 - `RADARR_KEY`: The API key to access Radarr.
 - `SONARR`: The URL of the Sonarr API.
 - `SONARR_KEY`: The API key to access Sonarr.
-- `OVERSEERR`: The URL of the Overseer web interface.
-- `OVERSEERR_KEY`: The API key to access Overseer.
 
 ## Usage
 
