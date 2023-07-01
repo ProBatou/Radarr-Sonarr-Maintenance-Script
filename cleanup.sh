@@ -12,10 +12,6 @@ RADARR_KEY=**************
 SONARR=http://localhost:8989/api/series
 SONARR_KEY=**************
 
-# Configurer Overseer
-OVERSEERR=http://localhost:5055
-OVERSEERR_KEY=*************************
-
 # Récupérer les chemins de fichiers de toutes les séries terminées, telles que surveillées par Sonarr
 ended_series_paths=$(curl --silent $SONARR -X GET -H "X-Api-Key: $SONARR_KEY" | jq -r '.[] | select(.status == "ended") | .path')
 
