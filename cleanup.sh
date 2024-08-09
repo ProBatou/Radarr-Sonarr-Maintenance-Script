@@ -1,16 +1,6 @@
 #!/bin/bash
 
-# Définir la capacité totale et le système de fichiers pour le stockage
-CAPACITY=90
-FILESYSTEM=/mnt/NAS/
-
-# Configurer Radarr
-RADARR=http://localhost:7878
-RADARR_KEY=**************
-
-# Configurer Sonarr
-SONARR=http://localhost:8989/api/series
-SONARR_KEY=**************
+source /etc/radarr-sonarr-maintenance.conf
 
 # Récupérer les chemins de fichiers de toutes les séries terminées, telles que surveillées par Sonarr
 ended_series_paths=$(curl --silent $SONARR -X GET -H "X-Api-Key: $SONARR_KEY" | jq -r '.[] | select(.status == "ended") | .path')
@@ -51,3 +41,62 @@ for id in $unmonitored_movies_ids; do
   # Envoyer une demande DELETE à l'API Radarr pour chaque identifiant
   curl --silent $RADARR/api/v3/movie/$id -X DELETE -H "X-Api-Key: $RADARR_KEY"
 done
+
+#-------------------------------------------------------------------
+
+#Flood suppression torrents importé
+# Configuration
+AUTH_URL="http://localhost:3000/api/auth/authenticate"
+TORRENTS_URL="http://localhost:3000/api/torrents"
+DELETE_URL="http://localhost:3000/api/torrents/delete"
+USERNAME=""
+PASSWORD=""
+
+# Authentification et récupération du cookie JWT
+auth_response=$(curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -D - \
+  -d "{\"username\": \"${USERNAME}\", \"password\": \"${PASSWORD}\"}" \
+  "${AUTH_URL}")
+
+# Extraction du cookie JWT
+jwt_cookie=$(echo "$auth_response" | grep -o 'jwt=[^;]*')
+
+# Vérification si le cookie a été extrait correctement
+if [ -z "$jwt_cookie" ]; then
+    echo "Erreur : Impossible de récupérer le cookie JWT."
+    exit 1
+fi
+
+# Récupération des hashes et des noms des torrents avec le tag "imported"
+torrents_response=$(curl -s -X GET \
+  -H "Content-Type: application/json" \
+  -H "Cookie: $jwt_cookie" \
+  "${TORRENTS_URL}")
+
+# Extraction des hashes et des noms des torrents
+hashes=$(echo "$torrents_response" | jq -r '.torrents[] | select(.tags[] | contains("imported")) | .hash')
+names=$(echo "$torrents_response" | jq -r '.torrents[] | select(.tags[] | contains("imported")) | .name')
+
+# Vérification si des torrents avec le tag "imported" existent
+if [ -z "$hashes" ]; then
+    echo "Aucun torrent avec le tag 'imported' trouvé."
+    exit 0
+fi
+
+# Conversion des hashes en tableau JSON
+hashes_json=$(echo "$hashes" | jq -R -s -c 'split("\n")[:-1]')
+
+# Suppression des torrents
+delete_response=$(curl -s -X POST \
+  -H "Content-Type: application/json" \
+  -H "Cookie: $jwt_cookie" \
+  -d "{\"hashes\": $hashes_json, \"deleteData\": true}" \
+  "${DELETE_URL}")
+
+# Affichage des noms des torrents supprimés
+echo "Les torrents suivants ont été supprimés :"
+echo "$names"
+
+# Affichage de la réponse de la suppression
+echo "Réponse de la suppression : $delete_response"
