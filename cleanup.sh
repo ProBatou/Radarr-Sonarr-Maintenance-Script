@@ -16,14 +16,14 @@ unmonitored_series_ids=$(curl --silent $SONARR -X GET -H "X-Api-Key: $SONARR_KEY
 if [ $(df -P $FILESYSTEM | awk '{gsub("%",""); capacity = $5}; END {print capacity}') -gt $CAPACITY ]; then
   # Itérer à travers tous les fichiers dans la variable `ended_series_paths`
   while read -r file; do
-    # Vérifier si le fichier est plus vieux que 180 jours
-    if [ ! $(find "$file" -mtime -180 | wc -l) -gt 0 ]; then
-      # Supprimer le fichier s'il est plus vieux que 180 jours
+    # Vérifier si le fichier est plus vieux que TIME_SERIES jours
+    if [ ! $(find "$file" -mtime -"$TIME_SERIES" | wc -l) -gt 0 ]; then
+      # Supprimer le fichier s'il est plus vieux que TIME_SERIES jours
       rm -rf "$file"
     fi
   done <<< "$ended_series_paths"
-  # Trouver tous les répertoires dans/mnt/NAS/Films/ qui sont plus vieux que 90 jours et les supprimer
-  find /mnt/NAS/Films/ -type d -mtime +90 -exec rm -rf {} \;
+  # Trouver tous les répertoires dans/mnt/NAS/Films/ qui sont plus vieux que TIME_MOVIES jours et les supprimer
+  find /mnt/NAS/Films/ -type d -mtime +"$TIME_MOVIES" -exec rm -rf {} \;
 fi
 
 #-------------------------------------------------------------------
