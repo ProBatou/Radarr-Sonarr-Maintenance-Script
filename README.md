@@ -19,6 +19,8 @@ Before running the script, you need to configure the following variables in the 
 - `RADARR_KEY`: The API key to access Radarr.
 - `SONARR`: The URL of the Sonarr API.
 - `SONARR_KEY`: The API key to access Sonarr.
+- `TIME_SERIES`: The Time to delete series
+- `TIME_FILMS`: The Time to delete films
 
 ## Usage
 
@@ -33,8 +35,8 @@ Before running the script, you need to configure the following variables in the 
 The "Radarr-Sonarr Maintenance Script" will perform the following tasks:
 
 1. Check the capacity of the file system.
-2. Remove completed series (older than 180 days) from the specified paths in Sonarr.
-3. Remove movie directories (older than 90 days) from the specified directory.
+2. Remove completed series (older than TIME_SERIES days) from the specified paths in Sonarr.
+3. Remove movie directories (older than TIME_FILMS days) from the specified directory.
 4. Remove unmonitored series from Sonarr.
 5. Remove unmonitored movies from Radarr.
 
